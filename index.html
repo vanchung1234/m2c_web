@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <base href="/">
+
+  <meta http-equiv="Content-Security-Policy" content="default-src *;
+                 script-src 'self' https://www.gstatic.com 'unsafe-inline' 'unsafe-eval';
+                 style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com;
+                 img-src 'self' data: https: blob:;
+                 media-src *;
+                 connect-src *;
+                 frame-src *;">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="A Flutter web app.">
+
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
+
+  <!-- WebView optimization meta tags -->
+  <meta name="format-detection" content="telephone=no">
+  <meta name="msapplication-tap-highlight" content="no">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  
+  <!-- Performance hints for webview -->
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+
+  <script>
+    // Optimize CanvasKit for webview performance
+    window.flutterCanvasKitConfiguration = {
+      canvasKitVariant: "lite",
+      canvasKitBaseUrl: "/canvaskit/",
+      // Reduce memory usage in webview
+      renderer: "canvaskit"
+    };
+    
+    // WebView performance optimizations
+    (function() {     
+      
+      // Optimize for webview environment
+      if (window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches) {
+        // Running in webview/app mode
+        document.documentElement.setAttribute('data-webview', 'true');
+      }
+    })();
+  </script>
+
+  <meta name="flutter-web-renderer" content="canvaskit">
+
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="DigiFinance">
+
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link rel="manifest" href="manifest.json">
+
+  <title>DigiFinance</title>
+
+  <!-- Preload lite CanvasKit assets -->
+  <!-- Note: Browser sẽ tự xử lý nếu file không tồn tại (dev mode) -->
+  <link rel="preload" href="/canvaskit/canvaskit.wasm" as="fetch" type="application/wasm" crossorigin="anonymous"
+    fetchpriority="high">
+  <link rel="preload" href="/canvaskit/canvaskit.js" as="script" fetchpriority="high">
+  <link rel="preload" href="main.dart.js" as="script" fetchpriority="high">
+  <link rel="preload" href="flutter.js" as="script" fetchpriority="high">
+  <link rel="preload" href="icons/ic_logo.png" as="image" type="image/png">
+
+  <!-- DNS prefetch for external resources -->
+  <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+  <link rel="dns-prefetch" href="https://www.gstatic.com">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      overscroll-behavior: none;
+      -webkit-text-size-adjust: 100%;
+      -webkit-overflow-scrolling: touch;
+      touch-action: manipulation;
+      background-color: transparent !important;
+    }
+
+    #flutter-container {
+      height: 100vh;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    input,
+    textarea,
+    select,
+    button {
+      font-size: 16px !important;
+      -webkit-appearance: none;
+      appearance: none;
+      touch-action: manipulation;
+    }
+
+    @supports (-webkit-touch-callout: none) {
+      body {
+        height: -webkit-fill-available;
+      }
+    }
+
+    #splash-screen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      text-align: center;
+      background: #ffffff;
+      z-index: 999998;
+      transition: opacity 120ms cubic-bezier(0.4, 0, 0.2, 1), visibility 0s linear 120ms;
+      will-change: opacity;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+
+    #splash-screen img {
+      width: 112px;
+      height: 112px;
+    }
+
+    #splash-screen.remove {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    canvas {
+      /* Tối ưu canvas cho webview - giảm memory và tăng performance */
+      will-change: transform;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
+      /* Hardware acceleration cho webview */
+      transform: translateZ(0);
+      -webkit-transform: translateZ(0);
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      /* Giảm memory usage */
+      image-rendering: auto;
+    }
+    
+    /* Tối ưu cho webview container */
+    [data-webview="true"] canvas {
+      /* Thêm optimizations cho webview mode */
+      contain: layout style paint;
+    }
+    
+    /* Tối ưu repaint cho webview */
+    flt-glass-pane {
+      contain: layout style paint;
+      will-change: transform;
+    }
+  </style>
+
+  <!-- Prevent back navigation -->
+  <script>
+    (function () {
+      try {
+        const pushLockState = () => window.history.pushState(null, '', window.location.href);
+        pushLockState();
+        window.addEventListener('popstate', function (_) {
+          pushLockState();
+        });
+      } catch (_) { }
+    })();
+  </script>
+
+  <!-- Unregister service worker -->
+  <script>
+    (function () {
+      try {
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(function (regs) {
+            regs.forEach(function (reg) { reg.unregister(); });
+          });
+        }
+      } catch (_) { }
+    })();
+  </script>
+
+  <!-- CanvasKit sẽ được Flutter tự động load khi cần -->
+  <!-- Không cần fetch manual vì đã có link rel="preload" ở trên -->
+
+  <!-- JS Bridge optimization for webview -->
+  <script>
+    (function() {
+      'use strict';
+      
+      // Optimize JS bridge communication
+      if (typeof window.flutter_inappwebview !== 'undefined') {
+        // Batch bridge calls to reduce overhead
+        let bridgeCallQueue = [];
+        let bridgeCallTimer = null;
+        const BRIDGE_BATCH_DELAY = 16; // ~1 frame at 60fps
+        
+        // Wrap original callHandler if exists
+        const originalCallHandler = window.flutter_inappwebview?.callHandler;
+        if (originalCallHandler) {
+          window.flutter_inappwebview.callHandler = function(handlerName, data) {
+            bridgeCallQueue.push({ handlerName, data, timestamp: Date.now() });
+            
+            if (!bridgeCallTimer) {
+              bridgeCallTimer = setTimeout(function() {
+                // Process queued calls
+                const calls = bridgeCallQueue.splice(0);
+                bridgeCallTimer = null;
+                
+                // Execute calls (native side should handle batching)
+                calls.forEach(function(call) {
+                  try {
+                    originalCallHandler.call(window.flutter_inappwebview, call.handlerName, call.data);
+                  } catch (e) {
+                    console.warn('Bridge call failed:', e);
+                  }
+                });
+              }, BRIDGE_BATCH_DELAY);
+            }
+          };
+        }
+      }
+      
+    })();
+  </script>
+
+  <script src="flutter.js" defer></script>
+  <script src="assets/pdfjs/pdf.min.js" defer></script>
+  <script defer>
+    try {
+      if (typeof pdfjsLib !== 'undefined') {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'assets/pdfjs/pdf.worker.min.js';
+      }
+    } catch (_) { }
+  </script>
+</head>
+
+<body>
+  <div id="splash-screen" role="img" aria-label="Loading">
+    <img src="icons/ic_logo.png" alt="Logo M2c" aria-hidden="true">
+    <p style="margin-top: 16px; font-size: 16px; color: #333;">Đang tải dữ liệu, vui lòng chờ...</p>
+  </div>
+
+  <div id="flutter-container"></div>
+
+  <script>
+    const serviceWorkerVersion = "1716302578";
+
+    window.addEventListener('load', function () {
+      _flutter.loader.loadEntrypoint({
+        serviceWorker: { serviceWorkerVersion },
+        onEntrypointLoaded: function (engineInitializer) {
+          engineInitializer.initializeEngine().then(function (appRunner) {
+            appRunner.runApp();
+
+            (function waitForFirstFrame() {
+              // Sử dụng MutationObserver để detect Flutter surface nhanh hơn
+              const observer = new MutationObserver(function(mutations, obs) {
+                const surface = document.querySelector('flt-glass-pane, canvas');
+                if (surface) {
+                  obs.disconnect();
+                  // Ẩn splash ngay khi detect được surface, không cần chờ frame
+                  const splash = document.getElementById('splash-screen');
+                  if (splash) {
+                    // Sử dụng requestAnimationFrame để đảm bảo smooth transition
+                    requestAnimationFrame(() => {
+                      splash.classList.add('remove');
+                      // Giảm timeout để ẩn nhanh hơn
+                      setTimeout(() => {
+                        if (splash.parentNode) {
+                          splash.parentNode.removeChild(splash);
+                        }
+                      }, 130);
+                    });
+                  }
+                }
+              });
+
+              // Bắt đầu observe ngay
+              observer.observe(document.body, {
+                childList: true,
+                subtree: true
+              });
+
+              // Fallback: vẫn check ngay để tránh delay nếu surface đã có sẵn
+              const surface = document.querySelector('flt-glass-pane, canvas');
+              if (surface) {
+                observer.disconnect();
+                const splash = document.getElementById('splash-screen');
+                if (splash) {
+                  requestAnimationFrame(() => {
+                    splash.classList.add('remove');
+                    setTimeout(() => {
+                      if (splash.parentNode) {
+                        splash.parentNode.removeChild(splash);
+                      }
+                    }, 130);
+                  });
+                }
+              }
+            })();
+          });
+        }
+      });
+    });
+  </script>
+</body>
+
+</html>
